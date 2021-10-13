@@ -132,6 +132,6 @@ original = 'Emily-In-Paris-gray.png'
 scribble = 'Emily-In-Paris-scribbles.png'
 gt_img = 'Emily-In-Paris-gt.png'
 
-for i in range(1, 6):
+for i in range(1, 11):
     all_in_one(original, scribble, gt_img, i)
-    print(f'T = {i} Done ------------------')
+    print(f'T = {i} Done ------------------\n')

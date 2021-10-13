@@ -1,0 +1,49 @@
+T = 1
+	Intersection = 119233
+	Union = 155746
+	IoU score = 76.55605922463498
+
+T = 2
+	Intersection = 118190
+	Union = 147607
+	IoU score = 80.0707283529914
+
+T = 3
+	Intersection = 114888
+	Union = 135136
+	IoU score = 85.01657589391428
+
+T = 4
+	Intersection = 117343
+	Union = 132286
+	IoU score = 88.70402007771041
+
+T = 5
+	Intersection = 117715
+	Union = 131232
+	IoU score = 89.69992075103633
+
+T = 6
+	Intersection = 119703
+	Union = 128723
+	IoU score = 92.99270526634712
+
+T = 7
+	Intersection = 119949
+	Union = 143383
+	IoU score = 83.6563609353968
+
+T = 8
+	Intersection = 120249
+	Union = 127281
+	IoU score = 94.47521625380064
+
+T = 9
+	Intersection = 120693
+	Union = 127748
+	IoU score = 94.4774086482763
+
+T = 10
+	Intersection = 120655
+	Union = 131070
+	IoU score = 92.05386434729535

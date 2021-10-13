@@ -1,4 +1,0 @@
-T = 2
-	intersection = 118190
-	union = 147607
-	IoU = 80.07%
