@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy import sparse
 from scipy.sparse import linalg
 
+
 def get_neighbor_pixels(image, coord, T):
     x, y = coord
     s_coord, s_value = [], []
@@ -59,15 +60,10 @@ def get_identity_weights(neighbor, scribbles_flat):
 
 
 def least_sq(i_minus_weight, scribbles_flat, h, w):
-    x_sky = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==1,1,0))
-    x_bui = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==2,1,0))
-    x_tre = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==3,1,0))
-    x_hai = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==4,1,0))
-    x_ski = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==5,1,0))
-    x_pho = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==6,1,0))
-    x_clo = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==7,1,0))
-    
-    n = np.stack([x_sky[0], x_bui[0], x_tre[0], x_hai[0], x_ski[0], x_pho[0], x_clo[0]], axis=0).argmax(axis=0)
+    temp_list = []
+    for i in range(1, 8):
+        temp_list.append(linalg.lsqr(i_minus_weight, np.where(scribbles_flat==i,1,0))[0])
+    n = np.stack(temp_list, axis=0).argmax(axis=0)
     return np.reshape(n, (h, w))
 
 
@@ -76,8 +72,7 @@ def get_ground_truth(gt_img):
 
 
 def get_iou_score(gt, spm):
-    intersections = []
-    unions = []
+    intersections, unions = [], []
     scores = []
     
     for i in range(7):
@@ -91,24 +86,23 @@ def get_iou_score(gt, spm):
         unions.append(union)
         scores.append(score)
         
-        print('class =', i)
-        print('Intersection =', np.sum(intersection))
-        print('Union =', np.sum(union))
-        print('IoU score =', score)
-        print()
+        print(f'class = {i}')
+        print(f'Intersection = {np.sum(intersection)}')
+        print(f'Union = {np.sum(union)}')
+        print(f'IoU score = {score}\n')
     
-    print('mIoU = ', sum(scores) / len(scores))
+    print(f'mIoU = {sum(scores) / len(scores)}')
     return intersections, unions, score
 
 
 def make_plot(gt, spm, intersections, unions):
-    plt.title(f'Multi-Label Ground Truth')
+    plt.title('Multi-Label Ground Truth')
     plt.imshow(gt)
-    plt.savefig(f'ml-gt.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
+    plt.savefig('ml-gt.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
     
-    plt.title(f'Multi-Label Output')
+    plt.title('Multi-Label Output')
     plt.imshow(spm)
-    plt.savefig(f'ml-output.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
+    plt.savefig('ml-output.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
     
     classes = ['Sky','Buildings','Tree','Hair','Skin','Phone','Clothes']
     
@@ -128,7 +122,6 @@ def make_plot(gt, spm, intersections, unions):
         plt.title(f'{classes[i]} Union')
         plt.imshow(unions[i])
         plt.savefig(f'{classes[i]}-union.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
-    
     print('Done')
     
 
@@ -145,8 +138,10 @@ def all_in_one(original_img, scribble_img, gt_img, T):
     intersections, unions, _ = get_iou_score(gt, spm)
     make_plot(gt, spm, intersections, unions)
 
+
 original = 'dataset/Emily-In-Paris-gray.png'
 scribble = 'dataset/Emily-In-Paris-scribbles-plus.png'
 gt_img = 'dataset/Emily-In-Paris-gt-plus.png'
+T = 5
 
-all_in_one(original, scribble, gt_img, 5)
+all_in_one(original, scribble, gt_img, T)

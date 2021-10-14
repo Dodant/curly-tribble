@@ -1,5 +1,3 @@
-import time
-
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -76,9 +74,9 @@ def get_ground_truth(gt_img):
 def get_iou_score(gt, spm):
     intersection, union = np.logical_and(gt, spm), np.logical_or(gt, spm)
     score = np.sum(intersection) * 100 / np.sum(union)
-    print('Intersection =', np.sum(intersection))
-    print('Union =', np.sum(union))
-    print('IoU score =', score)
+    print(f'Intersection = {np.sum(intersection)}')
+    print(f'Union = {np.sum(union)}')
+    print(f'IoU score = {score}')
     return intersection, union, score
 
 
@@ -117,7 +115,6 @@ def all_in_one(original_img, scribble_img, gt_img, T):
 original = 'dataset/Emily-In-Paris-gray.png'
 scribble = 'dataset/Emily-In-Paris-scribbles.png'
 gt_img = 'dataset/Emily-In-Paris-gt.png'
+T = 5
 
-st = time.time()
-all_in_one(original, scribble, gt_img, 5)
-print(f'time = {(time.time - st) / 60}m')
+all_in_one(original, scribble, gt_img, T)
