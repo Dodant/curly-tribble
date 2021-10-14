@@ -1,0 +1,2 @@
+background [0,0,1]
+foreground [0,0,2]

@@ -1,5 +1,3 @@
-import time
-
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,7 +6,7 @@ from scipy import sparse
 from scipy.sparse import linalg
 
 
-def get_neighbor_pixels(image, coord, T):
+def get_neighbor_pixels(lap, coord, T):
     x, y = coord
     s_coord, s_value = [], []
     
@@ -17,35 +15,27 @@ def get_neighbor_pixels(image, coord, T):
             if i == j == 0: continue
             try: 
                 if x + i < 0 or y + j < 0: continue
-                s = image[x+i][y+j] 
+                s = lap[x+i][y+j] 
                 s_coord.append((x+i, y+j))
                 s_value.append(s)
             except IndexError: continue     
     return s_coord, s_value
 
 
-def weight_f(mean, var, r, s): # option 2
-    eps = 1e-6
-    return 1 + ((r-mean)*(s-mean))/(var+eps)
-
-
-def get_weight(r, values):
-    n_mean, n_var = np.mean(values), np.var(values)
-    weight_neighbor = [weight_f(n_mean, n_var, r, i) for i in values]
-    return weight_neighbor / np.sum(weight_neighbor)
-
-
 def get_neighbor_matrix(image, T):
     height, width = image.shape
     neighborhood = sparse.lil_matrix((height * width, height * width)) # 337,500 * 337,500
     numbering = 0
+    # Laplacian 
+    lap = cv2.Laplacian(image, cv2.CV_8U, ksize=9)
+    norm = np.linalg.norm(lap)
+    norm_lap = lap / norm
+    
 
     for i in range(height):
         for j in range(width):
-            r = image[i][j]
-            coords, values = get_neighbor_pixels(image, (i, j), T)
-            normalized_neighbor = get_weight(r, values)
-            for (x, y), weight in zip(coords, normalized_neighbor):
+            coords, values = get_neighbor_pixels(norm_lap, (i, j), T)
+            for (x, y), weight in zip(coords, values):
                 neighborhood[numbering, x * width + y] = weight
             numbering += 1
     return neighborhood
@@ -56,7 +46,7 @@ def get_scribbles(scribbles_img):
 
 # I - w
 def get_identity_weights(neighbor, scribbles_flat):
-    for i in range(neighbor.shape[0]): 
+    for i in range(neighbor.shape[0]):
         if scribbles_flat[i] != 0: neighbor[i, :] = 0
     return sparse.identity(neighbor.shape[0]) - neighbor
 
@@ -82,22 +72,22 @@ def get_iou_score(gt, spm):
     return intersection, union, score
 
 
-def make_plot(T, gt, spm, intersection, union):
-    plt.title(f'T={T} Ground Truth')
+def make_plot(gt, spm, intersection, union):
+    plt.title(f'Ground Truth')
     plt.imshow(gt)
-    plt.savefig(f't{T}-gt.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
+    plt.savefig(f'lap-gt.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
     
-    plt.title(f'T={T} Output')
+    plt.title(f'Output')
     plt.imshow(spm)
-    plt.savefig(f't{T}-output.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
+    plt.savefig(f'lap-output.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
     
-    plt.title(f'T={T} Intersection')
+    plt.title(f'Intersection')
     plt.imshow(intersection)
-    plt.savefig(f't{T}-intersection.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
+    plt.savefig(f'lap-intersection.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
     
-    plt.title(f'T={T} Union')
+    plt.title(f'Union')
     plt.imshow(union)
-    plt.savefig(f't{T}-union.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
+    plt.savefig(f'lap-union.png', facecolor='#eeeeee', edgecolor='blue', bbox_inches='tight')
     print('Done')
     
 
@@ -111,13 +101,51 @@ def all_in_one(original_img, scribble_img, gt_img, T):
     spm = least_sq(i_minus_weight, scribbles_flat, height, width)
     gt = get_ground_truth(gt_img)
     intersection, union, _ = get_iou_score(gt, spm)
-    make_plot(T, gt, spm, intersection, union)
+    make_plot(gt, spm, intersection, union)
 
 
 original = 'dataset/Emily-In-Paris-gray.png'
 scribble = 'dataset/Emily-In-Paris-scribbles.png'
 gt_img = 'dataset/Emily-In-Paris-gt.png'
 
-st = time.time()
+
+all_in_one(original, scribble, gt_img, 3)
 all_in_one(original, scribble, gt_img, 5)
-print(f'time = {(time.time - st) / 60}m')
+all_in_one(original, scribble, gt_img, 7)
+all_in_one(original, scribble, gt_img, 9)
+
+# T = 3, kernel = 3
+# 49.04
+# T = 5, kernel = 3
+# 61.80
+# T = 7, kernel = 3
+# 68.55
+# T = 9, kernel = 3
+# 70.85
+
+# T = 3, kernel = 5
+# 46.12
+# T = 5, kernel = 5
+# 60.25
+# T = 7, kernel = 5
+# 72.21
+# T = 9, kernel = 5
+# 79.26
+
+# T = 3, kernel = 7
+# 45.71
+# T = 5, kernel = 7
+# 58.81
+# T = 7, kernel = 7
+# 76.94
+# T = 9, kernel = 7
+# 84.40
+
+# T = 3, kernel = 9
+# 46.20
+# T = 5, kernel = 9
+# 59.30
+# T = 7, kernel = 9
+# 77.19
+# T = 9, kernel = 9
+# 85.26

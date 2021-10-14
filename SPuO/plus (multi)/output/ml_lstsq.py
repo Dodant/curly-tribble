@@ -29,8 +29,7 @@ def weight_f(mean, var, r, s): # option 2
 def get_weight(r, values):
     n_mean, n_var = np.mean(values), np.var(values)
     weight_neighbor = [weight_f(n_mean, n_var, r, i) for i in values]
-    normalized_neighbor = weight_neighbor / np.sum(weight_neighbor)
-    return normalized_neighbor
+    return weight_neighbor / np.sum(weight_neighbor)
 
 
 def get_neighbor_matrix(image, T):
@@ -50,37 +49,30 @@ def get_neighbor_matrix(image, T):
 
 
 def get_scribbles(scribbles_img):
-    scribbles = cv2.imread(scribbles_img)
-    return np.sum(scribbles, axis=2).reshape(-1)
+    return np.sum(cv2.imread(scribbles_img), axis=2).reshape(-1)
 
 # I - w
-def get_identity_weights(neighbor, scribbles_flat, height, width):
-    identity_matrix = sparse.identity(height * width)
+def get_identity_weights(neighbor, scribbles_flat):
     for i in range(neighbor.shape[0]):
         if scribbles_flat[i] != 0: neighbor[i, :] = 0
-    return identity_matrix - neighbor
+    return sparse.identity(neighbor.shape[0]) - neighbor
 
 
 def least_sq(i_minus_weight, scribbles_flat, h, w):
-    print('lstsq start')
     x_sky = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==1,1,0))
     x_bui = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==2,1,0))
     x_tre = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==3,1,0))
     x_hai = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==4,1,0))
-    print('half way')
     x_ski = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==5,1,0))
     x_pho = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==6,1,0))
     x_clo = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==7,1,0))
-    print('lstsq finish')
     
-    n = np.stack([x_sky[0], x_bui[0], x_tre[0], x_hai[0], x_ski[0], x_pho[0], x_clo[0]], axis=0)
-    c = n.argmax(axis=0)
-    return np.reshape(c, (h, w))
+    n = np.stack([x_sky[0], x_bui[0], x_tre[0], x_hai[0], x_ski[0], x_pho[0], x_clo[0]], axis=0).argmax(axis=0)
+    return np.reshape(n, (h, w))
 
 
 def get_ground_truth(gt_img):
-    gt = cv2.imread(gt_img, cv2.COLOR_BGR2RGB)
-    return np.sum(gt, axis=2)
+    return np.sum(cv2.imread(gt_img, cv2.COLOR_BGR2RGB), axis=2)
 
 
 def get_iou_score(gt, spm):
@@ -146,15 +138,15 @@ def all_in_one(original_img, scribble_img, gt_img, T):
     
     neighbor = get_neighbor_matrix(img, T)
     scribbles_flat = get_scribbles(scribble_img)
-    i_minus_weight = get_identity_weights(neighbor, scribbles_flat, height, width)
+    i_minus_weight = get_identity_weights(neighbor, scribbles_flat)
     
     spm = least_sq(i_minus_weight, scribbles_flat, height, width)
     gt = get_ground_truth(gt_img)
-    intersections, unions, scores = get_iou_score(gt, spm)
+    intersections, unions, _ = get_iou_score(gt, spm)
     make_plot(gt, spm, intersections, unions)
 
-original = 'Emily-In-Paris-gray.png'
-scribble = 'Emily-In-Paris-scribbles-plus.png'
-gt_img = 'Emily-In-Paris-gt-plus.png'
+original = 'dataset/Emily-In-Paris-gray.png'
+scribble = 'dataset/Emily-In-Paris-scribbles-plus.png'
+gt_img = 'dataset/Emily-In-Paris-gt-plus.png'
 
 all_in_one(original, scribble, gt_img, 5)

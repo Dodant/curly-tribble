@@ -1,12 +1,9 @@
-import time
-
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
 from scipy import sparse
 from scipy.sparse import linalg
-
 
 def get_neighbor_pixels(image, coord, T):
     x, y = coord
@@ -32,7 +29,8 @@ def weight_f(mean, var, r, s): # option 2
 def get_weight(r, values):
     n_mean, n_var = np.mean(values), np.var(values)
     weight_neighbor = [weight_f(n_mean, n_var, r, i) for i in values]
-    return weight_neighbor / np.sum(weight_neighbor)
+    normalized_neighbor = weight_neighbor / np.sum(weight_neighbor)
+    return normalized_neighbor
 
 
 def get_neighbor_matrix(image, T):
@@ -52,25 +50,29 @@ def get_neighbor_matrix(image, T):
 
 
 def get_scribbles(scribbles_img):
-    return np.sum(cv2.imread(scribbles_img), axis=2).reshape(-1)
+    scribbles = cv2.imread(scribbles_img)
+    return np.sum(scribbles, axis=2).reshape(-1)
 
 # I - w
-def get_identity_weights(neighbor, scribbles_flat):
-    for i in range(neighbor.shape[0]): 
+def get_identity_weights(neighbor, scribbles_flat, height, width):
+    identity_matrix = sparse.identity(height * width)
+    for i in range(neighbor.shape[0]):
         if scribbles_flat[i] != 0: neighbor[i, :] = 0
-    return sparse.identity(neighbor.shape[0]) - neighbor
+    return identity_matrix - neighbor
 
 
 def least_sq(i_minus_weight, scribbles_flat, h, w):
     x_back = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==1,1,0))
     x_fore = linalg.lsqr(i_minus_weight, np.where(scribbles_flat==2,1,0))
     
-    n = np.stack([x_back[0], x_fore[0]], axis=0).argmax(axis=0)
-    return np.reshape(n, (h, w))
+    n = np.stack([x_back[0], x_fore[0]], axis=0)
+    c = n.argmax(axis=0)
+    return np.reshape(c, (h, w))
 
 
 def get_ground_truth(gt_img):
-    return np.sum(cv2.imread(gt_img, cv2.COLOR_BGR2RGB), axis=2)
+    gt = cv2.imread(gt_img, cv2.COLOR_BGR2RGB)
+    return np.sum(gt, axis=2)
 
 
 def get_iou_score(gt, spm):
@@ -107,10 +109,10 @@ def all_in_one(original_img, scribble_img, gt_img, T):
     
     neighbor = get_neighbor_matrix(img, T)
     scribbles_flat = get_scribbles(scribble_img)
-    i_minus_weight = get_identity_weights(neighbor, scribbles_flat)
+    i_minus_weight = get_identity_weights(neighbor, scribbles_flat, height, width)
     spm = least_sq(i_minus_weight, scribbles_flat, height, width)
     gt = get_ground_truth(gt_img)
-    intersection, union, _ = get_iou_score(gt, spm)
+    intersection, union, score = get_iou_score(gt, spm)
     make_plot(T, gt, spm, intersection, union)
 
 
@@ -118,6 +120,4 @@ original = 'dataset/Emily-In-Paris-gray.png'
 scribble = 'dataset/Emily-In-Paris-scribbles.png'
 gt_img = 'dataset/Emily-In-Paris-gt.png'
 
-st = time.time()
 all_in_one(original, scribble, gt_img, 5)
-print(f'time = {(time.time - st) / 60}m')

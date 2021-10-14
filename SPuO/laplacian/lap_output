@@ -1,0 +1,35 @@
+T = 3, kernel = 3
+49.04
+T = 5, kernel = 3
+61.80
+T = 7, kernel = 3
+68.55
+T = 9, kernel = 3
+70.85
+
+T = 3, kernel = 5
+46.12
+T = 5, kernel = 5
+60.25
+T = 7, kernel = 5
+72.21
+T = 9, kernel = 5
+79.26
+
+T = 3, kernel = 7
+45.71
+T = 5, kernel = 7
+58.81
+T = 7, kernel = 7
+76.94
+T = 9, kernel = 7
+84.40
+
+T = 3, kernel = 9
+46.20
+T = 5, kernel = 9
+59.30
+T = 7, kernel = 9
+77.19
+T = 9, kernel = 9
+85.26
