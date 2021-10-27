@@ -9,7 +9,7 @@ import source as src
 
 CROSS_OVER_P = 0.1
 MUTATION_P = 0.01
-GEN_ITERATION = 3000
+GEN_ITERATION = 6000
 POPULATION_SIZE = 100
 
 
@@ -21,6 +21,27 @@ def tournament(fitness, population):
             new_population.append(copy.deepcopy(population[x]))
         else:
             new_population.append(copy.deepcopy(individual))
+    return new_population
+
+
+def roulette(fitness, population):
+    fitness_list = [fitness(i, DISTANCE_MATRIX) for i in population]
+    max_fit = max(fitness_list)
+    reverse_fitness = [max_fit - i for i in fitness_list]
+    total = sum(reverse_fitness)
+    fitness_acc_list, fitness_acc = [], 0
+    new_population = []
+
+    for i in reverse_fitness:
+        fitness_acc += i / total
+        fitness_acc_list.append(fitness_acc)
+
+    for _ in range(POPULATION_SIZE):
+        x = random.random()
+        for i in range(len(fitness_acc_list)):
+            if x < fitness_acc_list[i]:
+                new_population.append(population[i])
+                break
     return new_population
 
 
@@ -40,7 +61,6 @@ def elitism(population, T):
     min_index, max_index = np.argsort(fitness_scores)[:T], np.argsort(fitness_scores)[-T:]
     for i in range(T):
         population[max_index[i]] = copy.deepcopy(population[min_index[i]])
-    random.shuffle(population)
     return population
 
 
@@ -68,10 +88,12 @@ for i in range(1, 31):
     aver, best = [], []
 
     for generation in range(GEN_ITERATION):
-        temp_p = tournament(src.fitness_function, population)
-        temp_p = crossover(temp_p)
-        temp_p = mutation(temp_p)
-        population = elitism(temp_p, int(POPULATION_SIZE * 0.2))
+        temp_p = elitism(population, int(POPULATION_SIZE * 0.2))
+        temp_p = tournament(src.fitness_function, temp_p)
+        temp_p = roulette(src.fitness_function, temp_p)
+        # temp_p = crossover(temp_p)
+        population = mutation(temp_p)
+        
 
         average_val, best_sample = evalution(population)
         aver.append((average_val, generation))
@@ -84,8 +106,8 @@ for i in range(1, 31):
     print(min(aver))
     print(min(best))
     plt.title("TSP fitness trace")
-    plt.plot(aver, label="Fitness, average")
-    plt.plot(best, label="Fitness, best")
+    plt.plot([i[0] for i in aver], label="Fitness, average")
+    plt.plot([i[0] for i in best], label="Fitness, best")
     plt.legend()
     plt.savefig(f"output/trace-{i}.png")
     plt.close()
@@ -97,4 +119,3 @@ for i in range(1, 31):
     with open(f"output/fitness-{i}.txt", "w") as f:
         f.write(txt)
     print(f'Data - {i}')
-    break
