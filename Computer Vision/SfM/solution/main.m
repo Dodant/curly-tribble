@@ -46,12 +46,22 @@ disp('- - Best Essential'); disp(E);
 
 % 5. Decompose E to camera extrinsic[R|T]
 disp('5 - Decompose E')
-cases = decompose(E); % 4 x ( 3 x 4 )
+diag = [ 1 0 0; 0 1 0; 0 0 0 ];
+W = [ 0 -1 0; 1 0 0; 0 0 1 ];
+
+[U,~,V] = svd(E); % all 3 x 3
+[U,~,V] = svd(U*diag*V');
+
+% four possible reconstruction
+possible_reconstructions = {[U*W*V' U(:,3)], ... 
+                            [U*W*V' -U(:,3)], ...
+                            [U*W'*V' U(:,3)], ...
+                            [U*W'*V' -U(:,3)]};
 
 
 % 6. Generate 3D point by implementing triangulation
 disp('6 - Generate 3D point')
-X = get3DPoint(cases,f1_K,f2_K); % X - 3 x m 
+X = get3DPoint(possible_reconstructions,f1_K,f2_K); % X - 3 x m 
 
 % plot X
 figure; pcshow(X'); shg;
