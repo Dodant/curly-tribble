@@ -1,15 +1,16 @@
+import time
+import argparse
+from warnings import filterwarnings
+
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torch.utils.data.dataset import random_split
-
-import torchvision
-from torchvision import models, transforms, datasets
+from torchvision import transforms
 from torchvision.datasets import CIFAR100
 
-import time
-import argparse
+
+filterwarnings('ignore')
 
 train_transform = transforms.Compose(
     [transforms.ToTensor(),
@@ -20,6 +21,7 @@ train_transform = transforms.Compose(
 test_transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
+
 
 def DistillationLoss(student_logit, teacher_logit, T):
     soft_label = F.softmax(teacher_logit / T, dim=1)
@@ -37,18 +39,20 @@ def kd_train(student_model, T, alpha, epochs, batch):
     num_workers = 4
 
     # teacher = ResNet56
-    teacher = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar100_resnet56", pretrained=True)
     # student = ResNet20, ResNet32, ResNet56
-    student = torch.hub.load("chenyaofo/pytorch-cifar-models", f"cifar100_resnet{student_model}", pretrained=False)
+    model_link = "chenyaofo/pytorch-cifar-models"
+    teacher = torch.hub.load(model_link, "cifar100_resnet56", pretrained=True)
+    student = torch.hub.load(model_link, f"cifar100_resnet{student_model}", pretrained=False)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     teacher.to(device)
     student.to(device)
+    teacher.eval()
 
     trainset = CIFAR100(root='./data', train=True, transform=train_transform)
     testset = CIFAR100(root='./data', train=False, transform=test_transform)
-    trainloader = DataLoader(trainset, batch_size=batch, shuffle=True, num_workers=num_workers, drop_last=True)
-    testloader = DataLoader(testset, batch_size=batch, shuffle=True, num_workers=num_workers, drop_last=True)
+    trainloader = DataLoader(trainset, batch_size=batch, shuffle=True, num_workers=num_workers, pin_memory=True, drop_last=True)
+    testloader = DataLoader(testset, batch_size=batch, shuffle=True, num_workers=num_workers, pin_memory=True, drop_last=True)
 
     optimizer = optim.Adam(student.parameters(), lr=0.001)
 
@@ -81,8 +85,7 @@ def kd_train(student_model, T, alpha, epochs, batch):
 
         # print(f"epoch: {epoch + 1} || tl: {epoch_loss:.3f}, ta: {epoch_acc:.2f}%")
 
-    train_end = time.time()
-    print(f'Training Finished - Train time : {(train_end - train_st) // 60}m\n')
+    print(f'Training Finished - Train time : {(time.time() - train_st) // 60}m\n')
 
     PATH = f'./student_cifar_{student_model}_{alpha}.pth'
     torch.save(student.state_dict(), PATH)

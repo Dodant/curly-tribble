@@ -1,20 +1,24 @@
+import argparse
+from warnings import filterwarnings
+
 import torch
 from torch.utils.data import DataLoader
-
 from torchvision import transforms
 from torchvision.datasets import CIFAR100
 
-import argparse
+filterwarnings('ignore')
 
 test_transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
 
+
 def kd_test(student_model, batch):
     # hyperparameter
     num_workers = 4
 
-    student = torch.hub.load("chenyaofo/pytorch-cifar-models", f"cifar100_resnet{student_model}", pretrained=True)
+    model_link = "chenyaofo/pytorch-cifar-models"
+    student = torch.hub.load(model_link, f"cifar100_resnet{student_model}", pretrained=True)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     student.to(device)
@@ -37,7 +41,6 @@ def kd_test(student_model, batch):
             for idx, item in enumerate(labels.view(-1, 1)):
                 if item in torch.topk(outputs_s, 5).indices[idx]:
                     correct_5s += 1
-
 
     print(f'Top1 Acc : - {correct_s * 100 / total_s:0.1f}% / Top5 Acc : student - {correct_5s * 100 / total_s:0.1f}%')
     print('===========================================\n')
