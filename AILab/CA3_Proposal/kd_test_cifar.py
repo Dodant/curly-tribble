@@ -19,6 +19,7 @@ def kd_test(student_model, batch):
 
     model_link = "chenyaofo/pytorch-cifar-models"
     student = torch.hub.load(model_link, f"cifar100_resnet{student_model}", pretrained=True)
+    student.eval()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     student.to(device)
