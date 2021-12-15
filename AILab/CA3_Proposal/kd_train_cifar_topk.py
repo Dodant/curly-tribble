@@ -23,18 +23,21 @@ test_transform = transforms.Compose(
      transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))])
 
 
-def DistillationLoss(student_logit, teacher_logit, T):
-    soft_label = F.softmax(teacher_logit / T, dim=1)
+def DistillationLoss(student_logit, teacher_logit, T, threshold):
+    new_teacher_logit = teacher_logit + torch.abs(torch.min(teacher_logit, dim=1).values.reshape(-1, 1))
+    bar = torch.sort(new_teacher_logit, descending=True).values[:, threshold-1].reshape(-1, 1).repeat(1, teacher_logit.shape[1])
+    new_teacher_logit = torch.where(bar <= new_teacher_logit, new_teacher_logit, torch.zeros(1, device=torch.device('cuda')))
+    soft_label = F.softmax(new_teacher_logit / T, dim=1)
     soft_prediction = F.log_softmax(student_logit / T, dim=1)
     return F.kl_div(soft_prediction, soft_label)
 
 
-def FinalLoss(teacher_logit, student_logit, labels, T, alpha):
+def FinalLoss(teacher_logit, student_logit, labels, T, alpha, threshold):
     return (1. - alpha) * F.cross_entropy(student_logit, labels) \
-           + (alpha * T * T) * DistillationLoss(student_logit, teacher_logit, T)
+           + (alpha * T * T) * DistillationLoss(student_logit, teacher_logit, T, threshold)
 
 
-def kd_train(student_model, T, alpha, epochs, batch):
+def kd_train(student_model, T, alpha, epochs, batch, threshold):
     # hyperparameter
     num_workers = 4
 
@@ -69,7 +72,7 @@ def kd_train(student_model, T, alpha, epochs, batch):
 
             student_logit = student(inputs)
             teacher_logit = teacher(inputs)
-            loss = FinalLoss(teacher_logit, student_logit, labels, T, alpha)
+            loss = FinalLoss(teacher_logit, student_logit, labels, T, alpha, threshold)
 
             optimizer.zero_grad()
             loss.backward()
@@ -83,11 +86,12 @@ def kd_train(student_model, T, alpha, epochs, batch):
         epoch_loss = train_loss / len(trainloader)
         epoch_acc = train_acc.float() / train_samples * 100
 
-        # print(f"epoch: {epoch + 1} || tl: {epoch_loss:.3f}, ta: {epoch_acc:.2f}%")
+        if (epoch + 1) % 10 == 0:
+            print(f"epoch: {epoch + 1} || tl: {epoch_loss:.3f}, ta: {epoch_acc:.2f}%")
 
     print(f'Training Finished - Train time : {(time.time() - train_st) // 60}m\n')
 
-    PATH = f'models./student_cifar_{student_model}_{alpha}.pth'
+    PATH = f'models/student_cifar_{student_model}_{alpha}_topk.pth'
     torch.save(student.state_dict(), PATH)
 
     correct_s, correct_5s, total_s = 0, 0, 0
@@ -129,6 +133,7 @@ if __name__ == "__main__":
     parser.add_argument('-alpha', type=float)
     parser.add_argument('-epochs', type=int)
     parser.add_argument('-batch', type=int)
+    parser.add_argument('-threshold', type=int)
 
     args = parser.parse_args()
-    kd_train(args.s, args.t, args.alpha, args.epochs, args.batch)
+    kd_train(args.s, args.t, args.alpha, args.epochs, args.batch, args.threshold)
