@@ -1,13 +1,9 @@
 import time
 
 import numpy as np
-import torch
-import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-import torchvision
 from torch.utils.data import DataLoader
-from torchvision import transforms, datasets
 from torchvision.utils import save_image, make_grid
 from torch.autograd import Variable
 
@@ -15,16 +11,16 @@ from loss_fn import *
 from model import *
 from dataset import *
 
-EPOCHS = 1000
+EPOCHS = 400
 SR_SHAPE = 256
 
 cuda = torch.cuda.is_available()
 
-generator = Generator()
-discriminator = Discriminator()
+generator = Generator().cuda()
+discriminator = Discriminator().cuda()
 
-content_loss = VGG_loss()
-adversarial_loss = nn.BCELoss()
+content_loss = VGG_loss().cuda()
+adversarial_loss = nn.BCELoss().cuda()
 
 optimizer_G = optim.Adam(generator.parameters(), lr=0.001)
 optimizer_D = optim.Adam(discriminator.parameters(), lr=0.001)
@@ -36,14 +32,26 @@ dataloader = DataLoader(
     drop_last=True
 )
 
-if cuda:
-    generator = generator.cuda()
-    discriminator = discriminator.cuda()
-    content_loss = content_loss.cuda()
-    adversarial_loss = adversarial_loss.cuda()
 
 print('go')
+print('train generator')
 total_st = time.time()
+
+for epoch in range(50):
+    for i, images in enumerate(dataloader):
+        lr = Variable(images["lr"].type(torch.cuda.FloatTensor))
+        hr = Variable(images["hr"].type(torch.cuda.FloatTensor))
+        sr = generator(lr)
+
+        optimizer_G.zero_grad()
+        loss_G = nn.MSELoss()(sr, hr)
+        loss_G.backward()
+        optimizer_G.step()
+    print(f'Epoch: {epoch:>3d}  --  loss : {loss_G:.3f}')
+torch.save(generator.state_dict(), f"saved_models/init_generator.pth")
+
+
+print('train generator and discriminator')
 for epoch in range(EPOCHS):
     st = time.time()
     train_loss = 0.0
@@ -73,17 +81,15 @@ for epoch in range(EPOCHS):
         loss_G.backward()
         optimizer_G.step()
 
-        train_loss += loss_G.item() + loss_D.item() # 합치는 거 의미 없음
-
-    epoch_loss = train_loss / len(dataloader)
-
+    # src code from - github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/srgan/srgan.py
     lr = nn.functional.interpolate(lr, scale_factor=4)
-    sr = make_grid(sr, nrow=1, normalize=True)
     lr = make_grid(lr, nrow=1, normalize=True)
-    img_grid = torch.cat((lr, sr), -1)
-    save_image(img_grid, f"images/epoch_{epoch}_16.png", normalize=False)
+    sr = make_grid(sr, nrow=1, normalize=True)
+    hr = make_grid(hr, nrow=1, normalize=True)
+    img_grid = torch.cat((lr, sr, hr), -1)
+    save_image(img_grid, f"images/epoch_{epoch}.png", normalize=False)
 
-    print(f'Epoch: {epoch:>3d}  loss: {epoch_loss:.3f}  --  {(time.time()-st)/60:.1f}m')
+    print(f'Epoch: {epoch:>3d}  --  {(time.time()-st)/60:.1f}m')
 
     if (epoch+1) % 10 == 0:
         torch.save(generator.state_dict(), f"saved_models/generator_{epoch+1}.pth")

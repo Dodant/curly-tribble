@@ -1,3 +1,5 @@
+# src code from - github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/GANs/SRGAN/loss.py
+
 import torch.cuda
 import torch.nn as nn
 from torchvision.models import vgg19

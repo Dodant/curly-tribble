@@ -1,23 +1,19 @@
 ## Generator Network
-# Input -> Conv(k9n64s1) -> PReLU ->
-# Residual Block  - 5 blocks
-# : Conv(k3n64s1) -> BN -> PReLU -> Conv(k3n64s1) -> BN -> Elmt Sum
-# Conv(k3n64s1) -> BN -> Elmt Sum ->
-# (Conv(k3n256s1) -> PixelShuffler * 2 -> PReLU) * 2 -> Conv(k9n3s1) -> SR!
+# Input -> Conv -> PReLU ->
+# Residual Block - B blocks
+# : Conv -> BN -> PReLU -> Conv -> BN -> Elmt Sum
+# Conv -> BN -> Elmt Sum ->
+# Upsampling Block - 2 blocks
+# : Conv -> PixelShuffler * 2 -> PReLU
+# Conv -> SR!
 
 ## Discriminator Network
-# Input -> Conv(k2n64s1) -> LeakyReLU
+# Input -> Conv -> LeakyReLU
 # Block - 7 blocks
 # : Conv -> BN -> LeakyReLU
-# k3n64s2 /
-# k3n128s1 / k3n128s2 /
-# k3n256s1 / k3n256s2 /
-# k3n512s1 / k3n512s2 /
-# Dense (1024) -> LeakReLU -> Dense (1) -> Sigmoid
+# Dense(1024) -> LeakyReLU -> Dense(1) -> Sigmoid
 
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class G_ResBlock(nn.Module):
@@ -29,9 +25,9 @@ class G_ResBlock(nn.Module):
         self.prelu = nn.PReLU(num_parameters=chnl)
 
     def forward(self, x):
-        x_ = self.prelu(self.bn(self.conv1(x)))
-        x_ = self.bn(self.conv2(x_))
-        return x + x_
+        x_ = self.bn(self.conv2(self.prelu(self.bn(self.conv1(x)))))
+        x = x + x_  # Elementwise sum
+        return x
 
 
 class G_UpsampleBlock(nn.Module):
@@ -51,9 +47,8 @@ class Generator(nn.Module):
         self.init_conv = nn.Conv2d(3, 64, 9, padding=4)
         self.prelu = nn.PReLU()
 
-        trunk = []
-        for _ in range(16):
-            trunk.append(G_ResBlock(64))
+        # src code form github.com/Lornatang/SRGAN-PyTorch/blob/master/model.py
+        trunk = [G_ResBlock(64) for _ in range(16)]
         self.trunk = nn.Sequential(*trunk)
 
         self.mid_conv = nn.Conv2d(64, 64, 3, padding=1)
@@ -61,7 +56,6 @@ class Generator(nn.Module):
         self.upsample1 = G_UpsampleBlock(64)
         self.upsample2 = G_UpsampleBlock(64)
         self.last_conv = nn.Conv2d(64, 3, 9, padding=4)
-        # self.tanh = nn.Tanh()
 
     def forward(self, x):
         b = self.prelu(self.init_conv(x))
@@ -76,12 +70,12 @@ class Generator(nn.Module):
 class D_Block(nn.Module):
     def __init__(self, in_chnls, out_chnls, stride):
         super(D_Block, self).__init__()
-        self.cnn1 = nn.Conv2d(in_chnls, out_chnls, stride, padding=1, bias=False)
+        self.cnn = nn.Conv2d(in_chnls, out_chnls, stride, padding=1, bias=False)
         self.bn = nn.BatchNorm2d(out_chnls)
         self.leakyrelu = nn.LeakyReLU(0.2, True)
 
     def forward(self, x):
-        return self.leakyrelu(self.bn(self.cnn1(x)))
+        return self.leakyrelu(self.bn(self.cnn(x)))
 
 
 class Discriminator(nn.Module):
@@ -115,17 +109,3 @@ class Discriminator(nn.Module):
         x = self.leakyrelu(self.fc1024(x))
         x = self.sigmoid(self.fc1(x))
         return x
-
-
-# 4x upsampling
-def test():
-    low_resolution = 24
-    with torch.cuda.amp.autocast():
-        x = torch.randn((5, 3, low_resolution, low_resolution))
-        generator = Generator()
-        discriminator = Discriminator()
-        gen_output = generator(x)
-        dis_output = discriminator(x)
-
-        print(gen_output.shape)
-        print(dis_output.shape)
