@@ -1,17 +1,17 @@
 echo 'start'
 
-#python anytree_gp.py -dataset 1 -trial 1
-#python anytree_gp.py -dataset 1 -trial 2
-#python anytree_gp.py -dataset 1 -trial 3
-#python anytree_gp.py -dataset 1 -trial 4
-#python anytree_gp.py -dataset 1 -trial 5
-#python anytree_gp.py -dataset 1 -trial 6
-#python anytree_gp.py -dataset 1 -trial 7
-#python anytree_gp.py -dataset 1 -trial 8
-#python anytree_gp.py -dataset 1 -trial 9
-#python anytree_gp.py -dataset 1 -trial 10
+python anytree_gp.py -dataset 1 -trial 1
+python anytree_gp.py -dataset 1 -trial 2
+python anytree_gp.py -dataset 1 -trial 3
+python anytree_gp.py -dataset 1 -trial 4
+python anytree_gp.py -dataset 1 -trial 5
+python anytree_gp.py -dataset 1 -trial 6
+python anytree_gp.py -dataset 1 -trial 7
+python anytree_gp.py -dataset 1 -trial 8
+python anytree_gp.py -dataset 1 -trial 9
+python anytree_gp.py -dataset 1 -trial 10
 
-#python anytree_gp.py -dataset 2 -trial 1
+python anytree_gp.py -dataset 2 -trial 1
 python anytree_gp.py -dataset 2 -trial 2
 python anytree_gp.py -dataset 2 -trial 3
 python anytree_gp.py -dataset 2 -trial 4
