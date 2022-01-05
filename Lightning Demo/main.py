@@ -29,64 +29,88 @@ class MNIST_Classifier(pl.LightningModule):
         return logits
 
     def configure_optimizers(self):
-        optimizer = optim.SGD(self.parameters(), lr=1e-2)
-        return optimizer
+        return optim.SGD(self.parameters(), lr=1e-2)
 
+    # STEP
     def training_step(self, batch, batch_idx):
         x, y = batch
         b = x.size(0)
         x = x.view(b, -1)
         logits = self(x)
         loss = self.loss(logits, y)
-        acc_1 = self.acc1(logits, y)
-        acc_5 = self.acc5(logits, y)
-        pbar = {'train_top1': acc_1, 'train_top5': acc_5}
-        self.log("train_loss", loss)
-        return {'loss': loss, 'progress_bar': pbar}
+        return {'loss': loss,
+                'progress_bar':
+                    {'top1_acc': self.acc1(logits, y), 'top5_acc': self.acc5(logits, y)}
+                }
 
     def validation_step(self, batch, batch_idx):
-        results = self.training_step(batch, batch_idx)
-        results['progress_bar']['val_top1'] = results['progress_bar']['train_top1']
-        results['progress_bar']['val_top5'] = results['progress_bar']['train_top5']
-        del results['progress_bar']['train_top1']
-        del results['progress_bar']['train_top5']
-        return results
+        x, y = batch
+        b = x.size(0)
+        x = x.view(b, -1)
+        logits = self(x)
+        loss = self.loss(logits, y)
+        return {'loss': loss,
+                'progress_bar':
+                    {'top1_acc': self.acc1(logits, y), 'top5_acc': self.acc5(logits, y)}
+                }
 
     def test_step(self, batch, batch_idx):
-        results = self.training_step(batch, batch_idx)
-        results['progress_bar']['test_top1'] = results['progress_bar']['train_top1']
-        results['progress_bar']['test_top5'] = results['progress_bar']['train_top5']
-        del results['progress_bar']['train_top1']
-        del results['progress_bar']['train_top5']
-        return results
+        return self.validation_step(batch, batch_idx)
 
-    def validation_epoch_end(self, val_step_outputs):
-        avg_val_loss = torch.tensor([x['loss'] for x in val_step_outputs]).mean()
-        avg_val_acc1 = torch.tensor([x['progress_bar']['val_top1'] for x in val_step_outputs]).mean()
-        avg_val_acc5 = torch.tensor([x['progress_bar']['val_top5'] for x in val_step_outputs]).mean()
-        pbar = {'avg_val_acc1': avg_val_acc1, 'avg_val_acc5': avg_val_acc5}
-        self.log('validation_loss', avg_val_loss)
-        return {'val_loss': avg_val_loss, 'progress_bar': pbar}
+    # EPOCH_END
+    def training_epoch_end(self, outputs):
+        train_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        train_acc1 = torch.stack([x['progress_bar']['top5_acc'] for x in outputs]).mean()
+        train_acc5 = torch.stack([x['progress_bar']['top5_acc'] for x in outputs]).mean()
+        self.log_dict({'Train Loss': train_loss,
+                       'Train Top-1 Accuracy': train_acc1 * 100,
+                       'Train Top-5 Accuracy': train_acc5 * 100,
+                       'step': self.current_epoch + 1.0})
 
+    def validation_epoch_end(self, outputs):
+        valid_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        valid_acc1 = torch.stack([x['progress_bar']['top1_acc'] for x in outputs]).mean()
+        valid_acc5 = torch.stack([x['progress_bar']['top5_acc'] for x in outputs]).mean()
+        self.log_dict({'Validation Loss': valid_loss,
+                       'Validation Top-1 Accuracy': valid_acc1 * 100,
+                       'Validation Top-5 Accuracy': valid_acc5 * 100,
+                       'step': self.current_epoch + 1.0})
+
+    def test_epoch_end(self, outputs):
+        test_acc1 = torch.stack([x['progress_bar']['top1_acc'] for x in outputs]).mean()
+        test_acc5 = torch.stack([x['progress_bar']['top5_acc'] for x in outputs]).mean()
+        self.log_dict({'Test Top-1 Accuracy': test_acc1 * 100,
+                       'Test Top-5 Accuracy': test_acc5 * 100,
+                       'step': 0.0})
+
+    # DATASET, DATALOADER
     def prepare_data(self):
         datasets.MNIST('data', train=True, download=True)
         datasets.MNIST('data', train=False, download=True)
 
     def setup(self, stage=None):
         MNIST_train = datasets.MNIST('data', train=True, download=False, transform=transforms.ToTensor())
-        self.dataset['test'] = datasets.MNIST('data', train=False, download=False, transform=transforms.ToTensor())
-        self.dataset['train'], self.dataset['valid'] = random_split(MNIST_train, [55000, 5000])
+        self.dataset_test = datasets.MNIST('data', train=False, download=False, transform=transforms.ToTensor())
+        self.dataset_train, self.dataset_valid = random_split(MNIST_train, [55000, 5000])
 
     def train_dataloader(self):
-        return DataLoader(self.dataset['train'], batch_size=32, num_workers=4, pin_memory=True)
+        return DataLoader(self.dataset_train, batch_size=128, num_workers=4, pin_memory=True,
+                          shuffle=True, drop_last=True)
 
     def val_dataloader(self):
-        return DataLoader(self.dataset['valid'], batch_size=32, num_workers=4, pin_memory=True)
+        return DataLoader(self.dataset_valid, batch_size=128, num_workers=4, pin_memory=True, drop_last=True)
 
     def test_dataloader(self):
-        return DataLoader(self.dataset['test'], batch_size=32, num_workers=4, pin_memory=True)
+        return DataLoader(self.dataset_test, batch_size=128, num_workers=4, pin_memory=True)
+
 
 model = MNIST_Classifier()
-trainer = pl.Trainer(progress_bar_refresh_rate=10, gpus=-1, max_epochs=5)
+trainer = pl.Trainer(progress_bar_refresh_rate=10, gpus=-1, max_epochs=10)
 trainer.fit(model)
-# trainer.test(model)
+trainer.test(model)
+
+
+# load model
+# net = MNIST_Classifier.load_from_checkpoint(PATH)
+# net.freeze()
+# out = net(x)
