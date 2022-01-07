@@ -105,7 +105,11 @@ class MNIST_Classifier(pl.LightningModule):
 
 
 model = MNIST_Classifier()
-trainer = pl.Trainer(progress_bar_refresh_rate=10, gpus=-1, max_epochs=10)
+trainer = pl.Trainer(progress_bar_refresh_rate=10,
+                     gpus=-1,
+                     max_epochs=10,
+                     precision=16
+                     )
 trainer.fit(model)
 trainer.test(model)
 
