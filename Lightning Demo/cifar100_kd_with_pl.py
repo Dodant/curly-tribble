@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
 import pytorch_lightning as pl
+from pl_bolts.callbacks import PrintTableMetricsCallback
 from torchmetrics import Accuracy
 
 warnings.filterwarnings(action='ignore')
@@ -20,7 +21,8 @@ class ResNet_KD(pl.LightningModule):
         self.teacher = torch.hub.load(model_link, 'cifar100_resnet56', pretrained=True)
         self.student = torch.hub.load(model_link, f'cifar100_resnet{student_model}', pretrained=False)
 
-        self.acc1, self.acc5 = Accuracy(), Accuracy(top_k=5)
+        self.train_acc1, self.train_acc5 = Accuracy(), Accuracy(top_k=5)
+        self.valid_acc1, self.valid_acc5 = Accuracy(), Accuracy(top_k=5)
         self.best_acc1, self.best_acc5, self.best_epoch = 0.0, 0.0, 0
 
         self.sched = torch.optim.lr_scheduler.CosineAnnealingLR(self.configure_optimizers(), T_max=400)
@@ -94,7 +96,7 @@ class ResNet_KD(pl.LightningModule):
             self.sched.step()
         return {'loss': loss,
                 'progress_bar':
-                    {'top1_acc': self.acc1(student_logit, labels), 'top5_acc': self.acc5(student_logit, labels)}
+                    {'top1_acc': self.train_acc1(student_logit, labels), 'top5_acc': self.train_acc5(student_logit, labels)}
                 }
 
     def validation_step(self, batch, batch_idx):
@@ -104,7 +106,7 @@ class ResNet_KD(pl.LightningModule):
         loss = self.FinalLoss(student_logit, teacher_logit, labels)
         return {'loss': loss,
                 'progress_bar':
-                    {'top1_acc': self.acc1(student_logit, labels), 'top5_acc': self.acc5(student_logit, labels)}
+                    {'top1_acc': self.valid_acc1(student_logit, labels), 'top5_acc': self.valid_acc5(student_logit, labels)}
                 }
 
     # def test_step(self, batch, batch_idx):
@@ -113,23 +115,24 @@ class ResNet_KD(pl.LightningModule):
     # EPOCH_END
     def training_epoch_end(self, outputs):
         train_loss = torch.stack([x['loss'] for x in outputs]).mean()
-        train_acc1 = torch.stack([x['progress_bar']['top1_acc'] for x in outputs]).mean()
-        train_acc5 = torch.stack([x['progress_bar']['top5_acc'] for x in outputs]).mean()
+        train_acc1, train_acc5 = self.train_acc1.compute(), self.train_acc5.compute()
         self.log_dict({'Train Loss': train_loss,
                        'Train Top-1 Accuracy': train_acc1 * 100,
                        'Train Top-5 Accuracy': train_acc5 * 100,
                        'step': self.current_epoch + 1})
+        self.train_acc1.reset()
 
     def validation_epoch_end(self, outputs):
         valid_loss = torch.stack([x['loss'] for x in outputs]).mean()
-        valid_acc1 = torch.stack([x['progress_bar']['top1_acc'] for x in outputs]).mean()
-        valid_acc5 = torch.stack([x['progress_bar']['top5_acc'] for x in outputs]).mean()
+        valid_acc1, valid_acc5 = self.valid_acc1.compute(), self.valid_acc5.compute()
         self.log_dict({'Validation Loss': valid_loss,
                        'Validation Top-1 Accuracy': valid_acc1 * 100,
                        'Validation Top-5 Accuracy': valid_acc5 * 100,
                        'step': self.current_epoch + 1})
+        # TODO more condition
         if self.best_acc1 < valid_acc1:
             self.best_acc1, self.best_acc5, self.best_epoch = valid_acc1, valid_acc5, self.current_epoch + 1
+        self.valid_acc1.reset()
 
     # def test_epoch_end(self, outputs):
     #     test_acc1 = torch.stack([x['progress_bar']['top1_acc'] for x in outputs]).mean()
@@ -173,9 +176,15 @@ def kd_train_and_test(student_model, T, T1, T2, alpha, K, option, batch, epochs)
           'CONFIG\n'
           f'student_model = {student_model} | option = {option} | alpha = {alpha}')
     st = time.time()
-    logger = pl.loggers.TensorBoardLogger('tb_logs', name=f'option{option}', version=f'alpha_{alpha}')
     model = ResNet_KD(student_model, T, T1, T2, alpha, K, option, batch)
-    trainer = pl.Trainer(gpus=-1, max_epochs=epochs, weights_summary=None, logger=logger)
+    logger = pl.loggers.TensorBoardLogger('tb_logs', name=f'option{option}', version=f'alpha_{alpha}')
+    # callback = PrintTableMetricsCallback()
+    trainer = pl.Trainer(gpus=-1,
+                         max_epochs=epochs,
+                         weights_summary=None,
+                         logger=logger,
+                         # callbacks=[callback]
+                         )
     trainer.fit(model)
     print(f'Total training time: {(time.time() - st) / 60: .1f}m\n'
           f'Best Top1 Acc: {model.best_acc1.item() * 100:.2f}% - epoch : {model.best_epoch}\n'
