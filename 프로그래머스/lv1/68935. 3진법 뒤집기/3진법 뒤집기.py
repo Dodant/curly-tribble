@@ -5,7 +5,4 @@ def solution(n):
         n //= 3
         if n == 0:
             break
-    result = 0
-    for idx, item in enumerate(''.join(answer)[::-1]):
-        result += int(item) * 3 ** idx
-    return result
+    return int(''.join(answer), 3)
