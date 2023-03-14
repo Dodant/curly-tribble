@@ -1,0 +1,1 @@
+solution = lambda i, j, k : str(list(range(i, j+1))).count(str(k))
