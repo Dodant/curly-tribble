@@ -7,66 +7,66 @@ data/cifar-10-batches-py/data_batch_4
 data/cifar-10-batches-py/data_batch_5
 data/cifar-10-batches-py/readme.html
 data/cifar-10-batches-py/test_batch
-Evolutionary AI/Traveling Salesman/output/fitness-1.txt
-Evolutionary AI/Traveling Salesman/output/fitness-2.txt
-Evolutionary AI/Traveling Salesman/output/fitness-3.txt
-Evolutionary AI/Traveling Salesman/output/fitness-4.txt
-Evolutionary AI/Traveling Salesman/output/fitness-5.txt
-Evolutionary AI/Traveling Salesman/output/fitness-6.txt
-Evolutionary AI/Traveling Salesman/output/fitness-7.txt
-Evolutionary AI/Traveling Salesman/output/fitness-8.txt
-Evolutionary AI/Traveling Salesman/output/fitness-9.txt
-Evolutionary AI/Traveling Salesman/output/fitness-10.txt
-Evolutionary AI/Traveling Salesman/output/fitness-11.txt
-Evolutionary AI/Traveling Salesman/output/fitness-12.txt
-Evolutionary AI/Traveling Salesman/output/fitness-13.txt
-Evolutionary AI/Traveling Salesman/output/fitness-14.txt
-Evolutionary AI/Traveling Salesman/output/fitness-15.txt
-Evolutionary AI/Traveling Salesman/output/fitness-16.txt
-Evolutionary AI/Traveling Salesman/output/fitness-17.txt
-Evolutionary AI/Traveling Salesman/output/fitness-18.txt
-Evolutionary AI/Traveling Salesman/output/fitness-19.txt
-Evolutionary AI/Traveling Salesman/output/fitness-20.txt
-Evolutionary AI/Traveling Salesman/output/fitness-21.txt
-Evolutionary AI/Traveling Salesman/output/fitness-22.txt
-Evolutionary AI/Traveling Salesman/output/fitness-23.txt
-Evolutionary AI/Traveling Salesman/output/fitness-24.txt
-Evolutionary AI/Traveling Salesman/output/fitness-25.txt
-Evolutionary AI/Traveling Salesman/output/fitness-26.txt
-Evolutionary AI/Traveling Salesman/output/fitness-27.txt
-Evolutionary AI/Traveling Salesman/output/fitness-28.txt
-Evolutionary AI/Traveling Salesman/output/fitness-29.txt
-Evolutionary AI/Traveling Salesman/output/fitness-30.txt
-Evolutionary AI/Traveling Salesman/output/trace-1.png
-Evolutionary AI/Traveling Salesman/output/trace-2.png
-Evolutionary AI/Traveling Salesman/output/trace-3.png
-Evolutionary AI/Traveling Salesman/output/trace-4.png
-Evolutionary AI/Traveling Salesman/output/trace-5.png
-Evolutionary AI/Traveling Salesman/output/trace-6.png
-Evolutionary AI/Traveling Salesman/output/trace-7.png
-Evolutionary AI/Traveling Salesman/output/trace-8.png
-Evolutionary AI/Traveling Salesman/output/trace-9.png
-Evolutionary AI/Traveling Salesman/output/trace-10.png
-Evolutionary AI/Traveling Salesman/output/trace-11.png
-Evolutionary AI/Traveling Salesman/output/trace-12.png
-Evolutionary AI/Traveling Salesman/output/trace-13.png
-Evolutionary AI/Traveling Salesman/output/trace-14.png
-Evolutionary AI/Traveling Salesman/output/trace-15.png
-Evolutionary AI/Traveling Salesman/output/trace-16.png
-Evolutionary AI/Traveling Salesman/output/trace-17.png
-Evolutionary AI/Traveling Salesman/output/trace-18.png
-Evolutionary AI/Traveling Salesman/output/trace-19.png
-Evolutionary AI/Traveling Salesman/output/trace-20.png
-Evolutionary AI/Traveling Salesman/output/trace-21.png
-Evolutionary AI/Traveling Salesman/output/trace-22.png
-Evolutionary AI/Traveling Salesman/output/trace-23.png
-Evolutionary AI/Traveling Salesman/output/trace-24.png
-Evolutionary AI/Traveling Salesman/output/trace-25.png
-Evolutionary AI/Traveling Salesman/output/trace-26.png
-Evolutionary AI/Traveling Salesman/output/trace-27.png
-Evolutionary AI/Traveling Salesman/output/trace-28.png
-Evolutionary AI/Traveling Salesman/output/trace-29.png
-Evolutionary AI/Traveling Salesman/output/trace-30.png
+Evolutionary_AI/Traveling Salesman/output/fitness-1.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-2.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-3.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-4.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-5.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-6.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-7.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-8.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-9.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-10.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-11.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-12.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-13.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-14.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-15.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-16.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-17.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-18.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-19.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-20.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-21.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-22.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-23.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-24.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-25.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-26.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-27.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-28.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-29.txt
+Evolutionary_AI/Traveling Salesman/output/fitness-30.txt
+Evolutionary_AI/Traveling Salesman/output/trace-1.png
+Evolutionary_AI/Traveling Salesman/output/trace-2.png
+Evolutionary_AI/Traveling Salesman/output/trace-3.png
+Evolutionary_AI/Traveling Salesman/output/trace-4.png
+Evolutionary_AI/Traveling Salesman/output/trace-5.png
+Evolutionary_AI/Traveling Salesman/output/trace-6.png
+Evolutionary_AI/Traveling Salesman/output/trace-7.png
+Evolutionary_AI/Traveling Salesman/output/trace-8.png
+Evolutionary_AI/Traveling Salesman/output/trace-9.png
+Evolutionary_AI/Traveling Salesman/output/trace-10.png
+Evolutionary_AI/Traveling Salesman/output/trace-11.png
+Evolutionary_AI/Traveling Salesman/output/trace-12.png
+Evolutionary_AI/Traveling Salesman/output/trace-13.png
+Evolutionary_AI/Traveling Salesman/output/trace-14.png
+Evolutionary_AI/Traveling Salesman/output/trace-15.png
+Evolutionary_AI/Traveling Salesman/output/trace-16.png
+Evolutionary_AI/Traveling Salesman/output/trace-17.png
+Evolutionary_AI/Traveling Salesman/output/trace-18.png
+Evolutionary_AI/Traveling Salesman/output/trace-19.png
+Evolutionary_AI/Traveling Salesman/output/trace-20.png
+Evolutionary_AI/Traveling Salesman/output/trace-21.png
+Evolutionary_AI/Traveling Salesman/output/trace-22.png
+Evolutionary_AI/Traveling Salesman/output/trace-23.png
+Evolutionary_AI/Traveling Salesman/output/trace-24.png
+Evolutionary_AI/Traveling Salesman/output/trace-25.png
+Evolutionary_AI/Traveling Salesman/output/trace-26.png
+Evolutionary_AI/Traveling Salesman/output/trace-27.png
+Evolutionary_AI/Traveling Salesman/output/trace-28.png
+Evolutionary_AI/Traveling Salesman/output/trace-29.png
+Evolutionary_AI/Traveling Salesman/output/trace-30.png
 AILab/Practical Material/d2l.bib
 AILab/Practical Material/index.ipynb
 AILab/Practical Material/setup.py
@@ -498,8 +498,15 @@ AILab/Practical Material/img/wattvsprice.svg
 AILab/Practical Material/img/where-wally-walker-books.jpg
 AILab/Practical Material/img/zeroSecDer.svg
 *.pth
-/Evolutionary AI/4. Genetic Programming/images/
-/Evolutionary AI/4. Genetic Programming/images/gp2/
-/Computer Vision/SRGAN/images/
-/Computer Vision/SRGAN/images/mse_generator/
-/Computer Vision/SRGAN/images/vgg_generator/
+/Evolutionary_AI/4. Genetic Programming/images/
+/Evolutionary_AI/4. Genetic Programming/images/gp2/
+/Computer_Vision/SRGAN/images/
+/Computer_Vision/SRGAN/images/mse_generator/
+/Computer_Vision/SRGAN/images/vgg_generator/
+
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+.idea
+*/.idea/*
+!/.gitignore
