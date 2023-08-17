@@ -8,7 +8,7 @@ for i in T:
     if i == '(':
         st.append(i)
     elif i == '|':
-        answer += st.count('(')
+        answer += len(st)
     elif i == ')':
         st.pop()
         answer += 1
