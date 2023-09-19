@@ -1,1 +1,0 @@
-solution = lambda n : int(n)
